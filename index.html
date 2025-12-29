@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shadow Terminal v4.0 Pro</title>
+    <style>
+        body {
+            background-color: #050505;
+            color: #00ff41;
+            font-family: 'Consolas', 'Courier New', monospace;
+            margin: 0;
+            padding: 20px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        #terminal {
+            flex-grow: 1;
+            overflow-y: auto;
+            margin-bottom: 15px;
+            padding: 10px;
+            z-index: 10;
+            position: relative;
+        }
+
+        .input-area {
+            display: flex;
+            background: rgba(0, 20, 0, 0.8);
+            padding: 15px;
+            border: 2px solid #00ff41;
+            border-radius: 8px;
+            z-index: 20;
+            box-shadow: 0 0 15px rgba(0, 255, 65, 0.2);
+        }
+
+        .prompt { color: #00ff41; font-weight: bold; margin-right: 12px; }
+
+        input {
+            background: transparent;
+            border: none;
+            color: #fff;
+            font-family: inherit;
+            font-size: 18px;
+            outline: none;
+            width: 100%;
+        }
+
+        .bot-text { margin: 8px 0; line-height: 1.5; font-size: 16px; white-space: pre-wrap; }
+        .user-text { color: #00ff41; font-weight: bold; margin: 12px 0; border-left: 3px solid #00ff41; padding-left: 10px; }
+        .success { color: #bf00ff; font-weight: bold; text-shadow: 0 0 8px #bf00ff; font-size: 18px; } 
+        .error { color: #ff3e3e; font-weight: bold; }
+
+        /* ম্যাপের জন্য বিশেষ স্টাইল */
+        .map-text { color: #00ff41; font-size: 12px; line-height: 1.2; opacity: 0.7; }
+
+        #name-overlay {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: clamp(40px, 10vw, 100px);
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 20px;
+            display: none;
+            z-index: 1;
+            opacity: 0.15;
+            text-align: center;
+            width: 100%;
+            animation: color-change 4s infinite alternate, pulse 3s infinite ease-in-out;
+            pointer-events: none;
+        }
+
+        @keyframes color-change {
+            0% { color: #00ff41; }
+            100% { color: #bf00ff; }
+        }
+
+        @keyframes pulse {
+            0% { transform: translate(-50%, -50%) scale(1); }
+            100% { transform: translate(-50%, -50%) scale(1.05); }
+        }
+
+        .scanline {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.15) 50%);
+            background-size: 100% 3px;
+            pointer-events: none;
+            z-index: 100;
+        }
+    </style>
+</head>
+<body onclick="document.getElementById('userInput').focus()">
+    <div id="name-overlay"></div>
+    <div class="scanline"></div>
+    <div id="terminal"></div>
+    
+    <div class="input-area">
+        <span class="prompt" id="current-prompt">guest@shadow:~#</span>
+        <input type="text" id="userInput" autofocus autocomplete="off" placeholder="Enter command...">
+    </div>
+
+    <script>
+        const terminal = document.getElementById('terminal');
+        const input = document.getElementById('userInput');
+        const nameOverlay = document.getElementById('name-overlay');
+        const promptLabel = document.getElementById('current-prompt');
+
+        let step = 'NAME';
+        let userName = "";
+        let isBgOn = true;
+
+        const osList = ["Windows 11 Pro", "Windows 10 Enterprise", "Kali Linux 2025.2", "Parrot Security OS", "macOS Sonoma", "Windows 12 Beta", "Android 15 (Rooted)", "iOS 18.2"];
+        const locationList = ["Dhaka, Bangladesh", "New York, USA", "London, UK", "Moscow, Russia", "Tokyo, Japan", "Berlin, Germany", "Dubai, UAE", "Paris, France", "Sydney, Australia", "Singapore City, Singapore"];
+
+        // ASCII World Map
+        const worldMap = `
+       _______________________________
+      /      |         |         |    \\
+     |  [X]  |  [ ]    |   [ ]   | [ ] |
+     |_______|_________|_________|_____|
+      \\ NY   |  LON    |   TOK   | SYD/
+       \\_____|_________|_________|___/
+        `;
+
+        function typeText(text, className = "bot-text", delay = 15) {
+            const p = document.createElement('p');
+            p.className = className;
+            terminal.appendChild(p);
+            
+            let i = 0;
+            const interval = setInterval(() => {
+                p.innerHTML += text.charAt(i);
+                i++;
+                if (i >= text.length) {
+                    clearInterval(interval);
+                    terminal.scrollTop = terminal.scrollHeight;
+                }
+            }, delay);
+        }
+
+        function startSystem() {
+            step = 'NAME';
+            userName = "";
+            nameOverlay.style.display = "none";
+            promptLabel.innerHTML = "guest@shadow:~#";
+            typeText(">>> SHADOW CORE v4.0 ONLINE <<<");
+            setTimeout(() => typeText("Identify yourself. Enter hacker name:"), 600);
+        }
+
+        input.addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') {
+                const val = input.value.trim();
+                const cmd = val.toLowerCase();
+                input.value = "";
+
+                if(val === "") return;
+
+                if (cmd === "c.a") {
+                    terminal.innerHTML = "";
+                    typeText("System: Memory cache cleared.", "success");
+                    if(step === 'MENU') showMenu();
+                    return;
+                }
+
+                if (cmd === "id.logout") {
+                    terminal.innerHTML = "";
+                    startSystem();
+                    return;
+                }
+
+                typeText("> " + val, "user-text");
+
+                if (cmd === "bg.off") {
+                    isBgOn = false;
+                    nameOverlay.style.display = "none";
+                    typeText("Alert: HUD visibility disabled.", "success");
+                    return;
+                }
+                if (cmd === "bg.on") {
+                    isBgOn = true;
+                    if (userName !== "") nameOverlay.style.display = "block";
+                    typeText("Alert: HUD visibility enabled.", "success");
+                    return;
+                }
+
+                handleInput(val);
+            }
+        });
+
+        function handleInput(val) {
+            if (step === 'NAME') {
+                userName = val;
+                step = 'PASS';
+                setTimeout(() => typeText("Enter access key for " + userName + ":"), 400);
+            } 
+            else if (step === 'PASS') {
+                if ((userName === "hackr pro" && val === "69.69") || ["666", "9666", "9.666"].includes(val)) {
+                    typeText("ACCESS GRANTED. Authorization successful.", "success");
+                    promptLabel.innerHTML = userName + "@shadow:~#";
+                    if(isBgOn) {
+                        nameOverlay.innerHTML = userName;
+                        nameOverlay.style.display = "block";
+                    }
+                    showMenu();
+                } else {
+                    typeText("ACCESS DENIED. Unauthorized attempt.", "error");
+                    step = 'NAME';
+                    setTimeout(() => typeText("Enter hacker name:"), 400);
+                }
+            } 
+            else if (step === 'MENU') {
+                if (val === '1') {
+                    typeText("Starting Brute-Force... Enter Target IP:");
+                    step = 'HACK_PASS';
+                } else if (val === '2') {
+                    typeText("Starting Deep Scan... Enter Target IP:");
+                    step = 'HACK_INFO';
+                } else if (val === '3') {
+                    typeText("Initializing Custom Ops. Describe target details:");
+                    step = 'CUSTOM';
+                } else {
+                    typeText("Command Error. Use 1, 2, or 3.", "error");
+                }
+            }
+            else if (step === 'HACK_PASS') {
+                typeText("Injecting packets into " + val + "...");
+                setTimeout(() => {
+                    typeText("DECRYPTED KEY: " + Math.random().toString(36).slice(-12).toUpperCase(), "success");
+                    showMenu();
+                }, 2000);
+            }
+            else if (step === 'HACK_INFO') {
+                typeText("Initializing Global Map Tracing...");
+                setTimeout(() => {
+                    // ম্যাপ দেখানো হচ্ছে
+                    typeText(worldMap, "map-text", 5);
+                    
+                    setTimeout(() => {
+                        const os = osList[Math.floor(Math.random() * osList.length)];
+                        const loc = locationList[Math.floor(Math.random() * locationList.length)];
+                        const batt = Math.floor(Math.random() * 100);
+                        
+                        typeText("--- SCAN RESULTS ---", "success");
+                        typeText("TARGET OS: " + os, "success");
+                        typeText("LOCATION: " + loc, "success");
+                        typeText("BATT LEVEL: " + batt + "%", "success");
+                        typeText("STATUS: Connection Stable. Surveillance active.", "success");
+                        showMenu();
+                    }, 1000);
+                }, 800);
+            }
+            else if (step === 'CUSTOM') {
+                typeText("Encoding operation details...");
+                setTimeout(() => {
+                    typeText("STATUS: Ops request received by the Shadow Council.", "success");
+                    showMenu();
+                }, 2000);
+            }
+        }
+
+        function showMenu() {
+            step = 'MENU';
+            setTimeout(() => {
+                typeText("\n[ MAIN CONTROL INTERFACE ]");
+                typeText("1: Crack Password | 2: Deep System Scan | 3: Custom Ops");
+                typeText("Commands: 'c.a' | 'id.logout' | 'bg.on' | 'bg.off'");
+            }, 800);
+        }
+
+        startSystem();
+    </script>
+</body>
+</html>
